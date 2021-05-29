@@ -3,6 +3,7 @@
 // instead of the target type itself.
 // You can read more about it at https://doc.rust-lang.org/std/convert/trait.TryFrom.html
 use std::convert::{TryFrom, TryInto};
+use std::ops::Range;
 
 #[derive(Debug, PartialEq)]
 struct Color {
@@ -10,8 +11,6 @@ struct Color {
     green: u8,
     blue: u8,
 }
-
-// I AM NOT DONE
 
 // Your task is to complete this implementation
 // and return an Ok result of inner type Color.
@@ -23,21 +22,52 @@ struct Color {
 // Also note that correct RGB color values must be integers in the 0..=255 range.
 
 // Tuple implementation
+
+fn in_range(v: &i16) -> bool {
+    let RGB: Range<i16> = 0..255;
+    RGB.contains(v)
+}
+
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = String;
-    fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {}
+    fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        return if in_range(&tuple.0) && in_range(&tuple.1) && in_range(&tuple.2) {
+            Ok(Color {
+                red: tuple.0 as u8,
+                green: tuple.1 as u8,
+                blue: tuple.2 as u8,
+            })
+        } else {
+            Err("oops".to_string())
+        };
+    }
 }
 
 // Array implementation
 impl TryFrom<[i16; 3]> for Color {
     type Error = String;
-    fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {}
+    fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        return if arr.iter().map(|a| in_range(&a)).all(|a| a == true) {
+            Ok(Color {
+                red: arr[0] as u8,
+                green: arr[1] as u8,
+                blue: arr[2] as u8,
+            })
+        } else {
+            Err("oops".to_string())
+        };
+    }
 }
 
 // Slice implementation
 impl TryFrom<&[i16]> for Color {
     type Error = String;
-    fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {}
+    fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        return match TryInto::<[i16; 3]>::try_into(slice) {
+            Ok(s) => Color::try_from(s),
+            Err(e) => Err(e.to_string()),
+        };
+    }
 }
 
 fn main() {
